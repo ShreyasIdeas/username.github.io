@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mystical Night Sky</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #fff;
+      --soft-ink: rgba(255, 255, 255, .72);
+      --lavender: #d9c8ff;
+      --cream: #f2e9d8;
+      --night: #0a0f2c;
+      --indigo: #1c1f4a;
+      --violet: #3a2f6e;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background: var(--night);
+    }
+
+    #app {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .sky {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(180deg, var(--night), var(--indigo), var(--violet));
+      transition: background 1s ease;
+    }
+
+    .stars {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+    }
+
+    .content {
+      min-height: 100vh;
+      width: min(100% - 48px, 560px);
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 32px 0;
+    }
+
+    .panel { animation: arrive .9s cubic-bezier(.2, .8, .2, 1) both; }
+
+    .title {
+      margin: 0;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 400;
+      line-height: 1.35;
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      margin: 24px 0 0;
+      font-size: 1.25rem;
+      line-height: 1.7;
+    }
+
+    .password-form {
+      display: grid;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    input, button {
+      font: inherit;
+      border: 0;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .1);
+      border: 1px solid rgba(255, 255, 255, .24);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input::placeholder { color: var(--soft-ink); }
+    input:focus { border-color: var(--lavender); box-shadow: 0 0 0 3px rgba(217, 200, 255, .18); }
+
+    button {
+      justify-self: center;
+      padding: 13px 22px;
+      color: #080912;
+      background: var(--lavender);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: transform .2s, filter .2s;
+    }
+
+    button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .error {
+      min-height: 1.25em;
+      margin: -6px 0 0;
+      color: #ffd5d5;
+      font-family: system-ui, sans-serif;
+      font-size: .85rem;
+    }
+
+    .hidden { display: none; }
+
+    .final {
+      color: #11101a;
+    }
+
+    .final .sky {
+      background: linear-gradient(180deg, var(--violet), var(--lavender), var(--cream));
+    }
+
+    .final .stars { opacity: .55; }
+    .final .title { font-size: clamp(1.4rem, 4vw, 1.85rem); }
+    .final .subtitle { color: rgba(17, 16, 26, .84); font-size: 1.25rem; }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <div class="sky" aria-hidden="true"></div>
+    <canvas class="stars" aria-hidden="true"></canvas>
+
+    <section class="content" id="password-screen">
+      <div class="panel">
+        <h1 class="title">The night remembers you.</h1>
+        <form class="password-form" id="password-form">
+          <label class="hidden" for="password">Secret word</label>
+          <input id="password" type="password" placeholder="Enter the secret word" autocomplete="off" autofocus>
+          <p class="error" id="error" role="alert" aria-live="polite"></p>
+          <button type="submit">Open the sky</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="content hidden" id="night-screen">
+      <div class="panel">
+        <h1 class="title" id="step-title"></h1>
+        <button id="next-step" type="button"></button>
+      </div>
+    </section>
+
+    <section class="content hidden final" id="final-screen">
+      <div class="panel">
+        <h1 class="title">Under this sky, your story began.<br><br>And under every sky since,<br>you’ve guided mine.</h1>
+        <p class="subtitle">Happy Birthday, Mom.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const secretPassword = 'aurora';
+    const app = document.querySelector('#app');
+    const sky = document.querySelector('.sky');
+    const passwordScreen = document.querySelector('#password-screen');
+    const nightScreen = document.querySelector('#night-screen');
+    const finalScreen = document.querySelector('#final-screen');
+    const passwordForm = document.querySelector('#password-form');
+    const passwordInput = document.querySelector('#password');
+    const error = document.querySelector('#error');
+    const stepTitle = document.querySelector('#step-title');
+    const nextStep = document.querySelector('#next-step');
+
+    const steps = [
+      ['The stars begin to glow.', 'Step into the night', ['#0A0F2C', '#1C1F4A']],
+      ['A constellation forms in the dark.', 'Follow the constellations', ['#1C1F4A', '#3A2F6E']],
+      ['The sky leans closer to listen.', 'Listen to what it says', ['#3A2F6E', '#D9C8FF']]
+    ];
+    let step = 0;
+
+    function showScreen(screen) {
+      [passwordScreen, nightScreen, finalScreen].forEach((item) => item.classList.add('hidden'));
+      screen.classList.remove('hidden');
+      screen.querySelector('.panel').style.animation = 'none';
+      requestAnimationFrame(() => { screen.querySelector('.panel').style.animation = ''; });
+    }
+
+    function renderStep() {
+      const [title, button, colors] = steps[step];
+      stepTitle.textContent = title;
+      nextStep.textContent = button;
+      sky.style.background = `linear-gradient(180deg, ${colors[0]}, ${colors[1]})`;
+    }
+
+    passwordForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (passwordInput.value.trim() === secretPassword) {
+        error.textContent = '';
+        step = 0;
+        renderStep();
+        showScreen(nightScreen);
+      } else {
+        error.textContent = 'The stars say try again.';
+        passwordInput.select();
+      }
+    });
+
+    nextStep.addEventListener('click', () => {
+      step += 1;
+      if (step > 2) {
+        sky.style.background = 'linear-gradient(180deg, #3A2F6E, #D9C8FF, #F2E9D8)';
+        showScreen(finalScreen);
+      } else {
+        renderStep();
+        showScreen(nightScreen);
+      }
+    });
+
+    const canvas = document.querySelector('.stars');
+    const context = canvas.getContext('2d');
+    const stars = Array.from({ length: 120 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      size: Math.random() * 2 + .5
+    }));
+    let twinkle = 0;
+
+    function resizeCanvas() {
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * scale;
+      canvas.height = window.innerHeight * scale;
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+    }
+
+    function drawStars() {
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      context.fillStyle = 'rgba(255, 255, 255, .8)';
+      stars.forEach((star) => {
+        const size = star.size * (.7 + twinkle * .3);
+        context.beginPath();
+        context.arc(star.x * window.innerWidth, star.y * window.innerHeight, size, 0, Math.PI * 2);
+        context.fill();
+      });
+      twinkle = (Math.sin(performance.now() / 1500) + 1) / 2;
+      requestAnimationFrame(drawStars);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    drawStars();
+  </script>
+</body>
+</html>
