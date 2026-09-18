@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'cosmic_background.dart';
 
 class UnlockScreen extends StatefulWidget {
   const UnlockScreen({super.key});
@@ -9,7 +10,7 @@ class UnlockScreen extends StatefulWidget {
 
 class _UnlockScreenState extends State<UnlockScreen> {
   final TextEditingController _controller = TextEditingController();
-  final String correctCode = "ORION"; // change this to your constellation
+  final String correctCode = "ORION";
 
   String message = "";
 
@@ -18,7 +19,7 @@ class _UnlockScreenState extends State<UnlockScreen> {
       Navigator.pushNamed(context, '/video');
     } else {
       setState(() {
-        message = "Look closely at the stars.";
+        message = "The stars whisper: look again.";
       });
     }
   }
@@ -26,27 +27,73 @@ class _UnlockScreenState extends State<UnlockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Enter the Pattern")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                labelText: "Constellation Code",
+      body: CosmicBackground(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Enter the Pattern",
+                style: TextStyle(
+                  fontSize: 28,
+                  color: Colors.white,
+                  fontFamily: 'Serif',
+                  letterSpacing: 2,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: checkCode,
-              child: const Text("Unlock"),
-            ),
-            const SizedBox(height: 20),
-            Text(message, style: const TextStyle(color: Colors.red)),
-          ],
+
+              const SizedBox(height: 30),
+
+              TextField(
+                controller: _controller,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.1),
+                  hintText: "Constellation Code",
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.15),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 18,
+                  ),
+                ),
+                onPressed: checkCode,
+                child: const Text(
+                  "Unlock",
+                  style: TextStyle(
+                    fontSize: 18,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
